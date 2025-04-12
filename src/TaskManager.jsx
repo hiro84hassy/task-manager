@@ -1,17 +1,17 @@
-// ✅ 各クライアントに属するタスクの一覧とそれぞれの進捗表示
+// ✅ 修正版UI（ボタン視認性改善 + タスク進捗一覧に戻す）
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 
 const themeColors = [
-  "bg-red-200", "bg-green-200", "bg-blue-200", "bg-yellow-200", "bg-purple-200", "bg-pink-200"
+  "bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "bg-purple-100", "bg-pink-100"
 ];
 
 export default function TaskManager() {
   const [clientList, setClientList] = useState([
-    { name: "クライアントA", color: "bg-red-200" },
-    { name: "クライアントB", color: "bg-green-200" }
+    { name: "クライアントA", color: "bg-red-100" },
+    { name: "クライアントB", color: "bg-green-100" }
   ]);
   const [newClient, setNewClient] = useState("");
   const [activeClient, setActiveClient] = useState("すべてのタスク");
@@ -44,13 +44,15 @@ export default function TaskManager() {
     setProjects(updated);
   };
 
+  const visibleClients = activeClient === "すべてのタスク" ? clientList : clientList.filter(c => c.name === activeClient);
+
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setActiveClient("すべてのタスク")} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === "すべてのタスク" ? "bg-blue-600 text-white" : "bg-gray-300 text-gray-800"}`}>すべてのタスク</Button>
+        <Button onClick={() => setActiveClient("すべてのタスク")} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === "すべてのタスク" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-900 hover:bg-blue-100"}`}>すべてのタスク</Button>
         {clientList.map((c, i) => (
           <div key={c.name} className="flex items-center gap-1">
-            <Button onClick={() => setActiveClient(c.name)} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === c.name ? "bg-blue-600 text-white" : `${c.color} text-black`}`}>{c.name}</Button>
+            <Button onClick={() => setActiveClient(c.name)} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === c.name ? "bg-blue-600 text-white" : `${c.color} text-gray-800 hover:bg-blue-100`}`}>{c.name}</Button>
             <Button size="sm" onClick={() => deleteClient(c.name)} className="text-xs text-red-500 hover:text-red-700">🗑</Button>
           </div>
         ))}
@@ -62,13 +64,13 @@ export default function TaskManager() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-        {clientList.map(c => (
+        {visibleClients.map(c => (
           <Card key={c.name} className={`rounded-xl shadow p-4 ${c.color}`}>
             <CardContent className="space-y-3">
-              <div className="font-bold text-lg">{c.name}</div>
+              <div className="font-bold text-lg text-gray-900">{c.name}</div>
               {(projects[c.name] || []).map((task, index) => (
                 <div key={index} className="bg-white p-2 rounded border shadow-sm flex justify-between items-center">
-                  <span>{task.title}</span>
+                  <span className="text-gray-800">{task.title}</span>
                   <span className={`text-sm font-medium ${task.done ? "text-green-600" : "text-gray-500"}`}>{task.done ? "完了" : "未完了"}</span>
                 </div>
               ))}
