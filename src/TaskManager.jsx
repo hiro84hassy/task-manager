@@ -1,8 +1,8 @@
+// ✅ プロジェクトベースのUIに復元（プロジェクトボタン + 完了率 + タスク追加）
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui/dialog";
 
 const projectNames = ["すべてのタスク", "プロジェクトA", "プロジェクトB"];
 
