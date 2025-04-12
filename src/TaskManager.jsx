@@ -1,4 +1,4 @@
-// ✅ クライアント名を選択式に変更＆ドロップダウンに「➕追加」項目追加／編集モーダル対応
+// ✅ タスク編集・削除・進捗率選択機能を追加
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
@@ -38,11 +38,27 @@ export default function TaskManager() {
   const addTask = () => {
     if (!newTask || !dueDate || !client || activeProject === "すべてのタスク") return;
     const updated = { ...projects };
-    updated[activeProject].push({ title: newTask, due: dueDate, client, status: "todo" });
+    updated[activeProject].push({ title: newTask, due: dueDate, client, progress: 0 });
     setProjects(updated);
     setNewTask("");
     setDueDate("");
     setClient("");
+  };
+
+  const updateTask = (idx, field, value) => {
+    const updated = { ...projects };
+    const list = activeProject === "すべてのタスク" ? allTasks : updated[activeProject];
+    if (activeProject !== "すべてのタスク") {
+      list[idx][field] = value;
+      setProjects(updated);
+    }
+  };
+
+  const deleteTask = (idx) => {
+    if (activeProject === "すべてのタスク") return;
+    const updated = { ...projects };
+    updated[activeProject].splice(idx, 1);
+    setProjects(updated);
   };
 
   const handleClientSelect = (value) => {
@@ -138,9 +154,28 @@ export default function TaskManager() {
       <div className="grid grid-cols-1 gap-4">
         {filteredTasks.map((task, idx) => (
           <Card key={idx} className="bg-white rounded-xl shadow p-4">
-            <CardContent className="p-0">
-              <div className="font-semibold text-lg text-black">{task.title}</div>
+            <CardContent className="p-0 space-y-2">
+              <Input
+                value={task.title}
+                onChange={(e) => updateTask(idx, "title", e.target.value)}
+                className="text-black font-semibold text-lg w-full"
+              />
               <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm">進捗:</label>
+                <select
+                  value={task.progress || 0}
+                  onChange={(e) => updateTask(idx, "progress", Number(e.target.value))}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {[...Array(11)].map((_, i) => (
+                    <option key={i} value={i * 10}>{i * 10}%</option>
+                  ))}
+                </select>
+                <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>
+                  削除
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
