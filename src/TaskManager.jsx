@@ -27,7 +27,6 @@ export default function TaskManager() {
   const [editingTaskIndex, setEditingTaskIndex] = useState(null);
   const [showCompleted, setShowCompleted] = useState(true);
 
-  // データの保存と読み込み
   useEffect(() => {
     const saved = localStorage.getItem("myTasks");
     if (saved) setTasks(JSON.parse(saved));
@@ -86,7 +85,6 @@ export default function TaskManager() {
   const doneTasks = filteredTasks.filter(t => t.progress === 100).length;
   const completionRate = filteredTasks.length === 0 ? 0 : Math.round((doneTasks / filteredTasks.length) * 100);
 
-  // 並び替え（進捗順）
   filteredTasks.sort((a, b) => a.progress - b.progress);
 
   const isDueSoon = (due) => {
@@ -98,7 +96,70 @@ export default function TaskManager() {
 
   return (
     <div className={`bg-gradient-to-br ${themes[theme]} min-h-screen p-4 sm:p-6 space-y-6`}>
-      {/* 省略：ボタン・入力エリアは変わらず */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="text-sm font-semibold tracking-wide">
+          📂 現在のボード: {activeClient} | 🌟 完了率: {completionRate}%（{doneTasks}/{filteredTasks.length}）
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="rounded px-2 py-1 text-sm border"
+          >
+            <option value="blue">🔵 青系</option>
+            <option value="pink">🌸 ピンク系</option>
+            <option value="green">🌿 緑系</option>
+            <option value="dark">🌙 ダーク</option>
+          </select>
+          <Button variant="outline" onClick={() => setShowClientDialog(true)}>🖋 クライアント管理</Button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button
+          onClick={() => setActiveClient("すべてのタスク")}
+          className={`text-xs rounded-full px-3 py-1 ${activeClient === "すべてのタスク" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-200"}`}
+        >すべてのタスク</Button>
+        {clientList.map(name => (
+          <Button
+            key={name}
+            onClick={() => setActiveClient(name)}
+            className={`text-xs rounded-full px-3 py-1 ${activeClient === name ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-200"}`}
+          >{name}</Button>
+        ))}
+      </div>
+
+      <Input
+        placeholder="🔍 タスク名またはクライアント名で検索"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-blue-300 rounded-xl px-4 py-2 bg-white text-black shadow-sm"
+      />
+
+      <div className="grid gap-3 sm:gap-5 mb-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+        <Input
+          placeholder="✨ 新しいタスク"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        />
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        />
+        <select
+          value={client || ""}
+          onChange={(e) => handleClientSelect(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        >
+          <option value="">🎨 クライアントを選択</option>
+          {clientList.map(c => <option key={c} value={c}>{c}</option>)}
+          <option value="__add__">＋ クライアントを追加</option>
+        </select>
+        <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl px-4 py-2 w-full">＋ 追加</Button>
+      </div>
 
       <div className="grid grid-cols-1 gap-4">
         {filteredTasks.map((task, idx) => {
@@ -127,7 +188,15 @@ export default function TaskManager() {
         })}
       </div>
 
-      {/* 省略：クライアント編集Dialog */}
+      <Dialog open={showClientDialog} onOpenChange={setShowClientDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>クライアント名を編集</DialogTitle>
+            <Input value={editClients} onChange={(e) => setEditClients(e.target.value)} placeholder="例: A, B, C" />
+            <Button onClick={saveClientList} className="mt-2">保存</Button>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
