@@ -1,8 +1,9 @@
-// ✅ クライアント名を選択式に変更＆自分で追加できるように対応
+// ✅ クライアント名を選択式に変更＆ドロップダウンに「➕追加」項目追加／編集モーダル対応
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui/dialog";
 
 const projectNames = ["すべてのタスク", "プロジェクトA", "プロジェクトB"];
 
@@ -20,12 +21,14 @@ export default function TaskManager() {
   const [newTask, setNewTask] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [client, setClient] = useState("");
-  const [newClient, setNewClient] = useState("");
   const [clientList, setClientList] = useState(["クライアントA", "クライアントB"]);
   const [projects, setProjects] = useState({
     "プロジェクトA": [],
     "プロジェクトB": []
   });
+
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [editClients, setEditClients] = useState(clientList.join(", "));
 
   const allTasks = Object.values(projects).flat();
   const currentTasks = activeProject === "すべてのタスク" ? allTasks : projects[activeProject];
@@ -42,10 +45,19 @@ export default function TaskManager() {
     setClient("");
   };
 
-  const addClient = () => {
-    if (!newClient.trim() || clientList.includes(newClient.trim())) return;
-    setClientList([...clientList, newClient.trim()]);
-    setNewClient("");
+  const handleClientSelect = (value) => {
+    if (value === "__add__") {
+      setEditClients(clientList.join(", "));
+      setShowClientDialog(true);
+    } else {
+      setClient(value);
+    }
+  };
+
+  const saveClientList = () => {
+    const cleaned = editClients.split(",").map(c => c.trim()).filter(Boolean);
+    setClientList(cleaned);
+    setShowClientDialog(false);
   };
 
   const filteredTasks = currentTasks.filter(t => t.title.includes(search) || t.client.includes(search));
@@ -67,6 +79,9 @@ export default function TaskManager() {
             <option value="green">🌿 緑系</option>
             <option value="dark">🌙 ダーク</option>
           </select>
+          <Button variant="outline" size="sm" onClick={() => setShowClientDialog(true)}>
+            ✏ クライアント管理
+          </Button>
         </div>
       </div>
 
@@ -108,25 +123,16 @@ export default function TaskManager() {
         />
         <select
           value={client}
-          onChange={(e) => setClient(e.target.value)}
+          onChange={(e) => handleClientSelect(e.target.value)}
           className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
         >
           <option value="">🎨 クライアントを選択</option>
           {clientList.map((c, i) => (
             <option key={i} value={c}>{c}</option>
           ))}
+          <option value="__add__">➕ クライアントを追加・編集</option>
         </select>
         <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl px-4 py-2 transition-all shadow-md w-full">＋ 追加</Button>
-      </div>
-
-      <div className="flex gap-2 mb-6">
-        <Input
-          placeholder="➕ クライアントを追加"
-          value={newClient}
-          onChange={(e) => setNewClient(e.target.value)}
-          className="rounded-xl px-4 py-2 border border-gray-300 bg-white text-black shadow-sm w-full"
-        />
-        <Button onClick={addClient} className="bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl px-4 py-2 transition-all shadow-md">追加</Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -139,6 +145,26 @@ export default function TaskManager() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={showClientDialog} onOpenChange={setShowClientDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>クライアントを編集</DialogTitle>
+          </DialogHeader>
+          <textarea
+            className="w-full border border-gray-300 rounded p-2 text-sm"
+            rows={4}
+            placeholder="カンマ区切りで入力（例：クライアントA, クライアントB）"
+            value={editClients}
+            onChange={(e) => setEditClients(e.target.value)}
+          />
+          <div className="flex justify-end mt-3">
+            <Button onClick={saveClientList} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded">
+              保存
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
