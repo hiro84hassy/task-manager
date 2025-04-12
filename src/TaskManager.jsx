@@ -1,4 +1,4 @@
-// ✅ タスク編集・削除・進捗率選択機能を追加
+// ✅ タスク編集はクリック時に表示されるよう改善
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
@@ -29,6 +29,7 @@ export default function TaskManager() {
 
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [editClients, setEditClients] = useState(clientList.join(", "));
+  const [editingTaskIndex, setEditingTaskIndex] = useState(null);
 
   const allTasks = Object.values(projects).flat();
   const currentTasks = activeProject === "すべてのタスク" ? allTasks : projects[activeProject];
@@ -155,27 +156,37 @@ export default function TaskManager() {
         {filteredTasks.map((task, idx) => (
           <Card key={idx} className="bg-white rounded-xl shadow p-4">
             <CardContent className="p-0 space-y-2">
-              <Input
-                value={task.title}
-                onChange={(e) => updateTask(idx, "title", e.target.value)}
-                className="text-black font-semibold text-lg w-full"
-              />
-              <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm">進捗:</label>
-                <select
-                  value={task.progress || 0}
-                  onChange={(e) => updateTask(idx, "progress", Number(e.target.value))}
-                  className="border rounded px-2 py-1 text-sm"
-                >
-                  {[...Array(11)].map((_, i) => (
-                    <option key={i} value={i * 10}>{i * 10}%</option>
-                  ))}
-                </select>
-                <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>
-                  削除
-                </Button>
+              <div
+                className="text-black font-semibold text-lg cursor-pointer hover:underline"
+                onClick={() => setEditingTaskIndex(editingTaskIndex === idx ? null : idx)}
+              >
+                {task.title}
               </div>
+              {editingTaskIndex === idx && (
+                <>
+                  <Input
+                    value={task.title}
+                    onChange={(e) => updateTask(idx, "title", e.target.value)}
+                    className="text-black font-semibold text-lg w-full"
+                  />
+                  <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm">進捗:</label>
+                    <select
+                      value={task.progress || 0}
+                      onChange={(e) => updateTask(idx, "progress", Number(e.target.value))}
+                      className="border rounded px-2 py-1 text-sm"
+                    >
+                      {[...Array(11)].map((_, i) => (
+                        <option key={i} value={i * 10}>{i * 10}%</option>
+                      ))}
+                    </select>
+                    <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>
+                      削除
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         ))}
