@@ -1,79 +1,118 @@
-// ✅ 修正版UI（ボタン視認性改善 + タスク進捗一覧に戻す）
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui/dialog";
 
-const themeColors = [
-  "bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "bg-purple-100", "bg-pink-100"
-];
+const projectNames = ["すべてのタスク", "プロジェクトA", "プロジェクトB"];
+
+const themes = {
+  blue: "from-white to-blue-100 text-gray-900",
+  pink: "from-pink-100 to-red-100 text-gray-900",
+  green: "from-green-100 to-teal-100 text-gray-900",
+  dark: "from-gray-900 to-gray-800 text-white"
+};
 
 export default function TaskManager() {
-  const [clientList, setClientList] = useState([
-    { name: "クライアントA", color: "bg-red-100" },
-    { name: "クライアントB", color: "bg-green-100" }
-  ]);
-  const [newClient, setNewClient] = useState("");
-  const [activeClient, setActiveClient] = useState("すべてのタスク");
+  const [activeProject, setActiveProject] = useState("すべてのタスク");
+  const [theme, setTheme] = useState("blue");
+  const [search, setSearch] = useState("");
+  const [newTask, setNewTask] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [client, setClient] = useState("");
   const [projects, setProjects] = useState({
-    "クライアントA": [
-      { title: "タスク1", done: true },
-      { title: "タスク2", done: false },
-      { title: "タスク3", done: false }
-    ],
-    "クライアントB": [
-      { title: "タスク1", done: true }
-    ]
+    "プロジェクトA": [],
+    "プロジェクトB": []
   });
 
-  const addClient = () => {
-    if (!newClient.trim()) return;
-    const exists = clientList.some(c => c.name === newClient.trim());
-    if (exists) return;
-    const color = themeColors[clientList.length % themeColors.length];
-    setClientList([...clientList, { name: newClient.trim(), color }]);
-    setProjects({ ...projects, [newClient.trim()]: [] });
-    setNewClient("");
-  };
+  const allTasks = Object.values(projects).flat();
+  const currentTasks = activeProject === "すべてのタスク" ? allTasks : projects[activeProject];
+  const doneTasks = currentTasks.filter(t => t.status === "done").length;
+  const completionRate = currentTasks.length === 0 ? 0 : Math.round((doneTasks / currentTasks.length) * 100);
 
-  const deleteClient = (name) => {
-    if (activeClient === name) return alert("表示中のクライアントは削除できません");
-    setClientList(clientList.filter(c => c.name !== name));
+  const addTask = () => {
+    if (!newTask || !dueDate || !client || activeProject === "すべてのタスク") return;
     const updated = { ...projects };
-    delete updated[name];
+    updated[activeProject].push({ title: newTask, due: dueDate, client, status: "todo" });
     setProjects(updated);
+    setNewTask("");
+    setDueDate("");
+    setClient("");
   };
 
-  const visibleClients = activeClient === "すべてのタスク" ? clientList : clientList.filter(c => c.name === activeClient);
+  const filteredTasks = currentTasks.filter(t => t.title.includes(search) || t.client.includes(search));
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setActiveClient("すべてのタスク")} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === "すべてのタスク" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-900 hover:bg-blue-100"}`}>すべてのタスク</Button>
-        {clientList.map((c, i) => (
-          <div key={c.name} className="flex items-center gap-1">
-            <Button onClick={() => setActiveClient(c.name)} className={`text-xs px-3 py-1 rounded-full shadow ${activeClient === c.name ? "bg-blue-600 text-white" : `${c.color} text-gray-800 hover:bg-blue-100`}`}>{c.name}</Button>
-            <Button size="sm" onClick={() => deleteClient(c.name)} className="text-xs text-red-500 hover:text-red-700">🗑</Button>
-          </div>
+    <div className={`bg-gradient-to-br ${themes[theme]} min-h-screen p-4 sm:p-6 space-y-6`}>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <div className="text-sm font-semibold tracking-wide">
+          📂 現在のボード: {activeProject} | 🌟 完了率: {completionRate}%（{doneTasks}/{currentTasks.length}）
+        </div>
+        <div className="flex gap-2 items-center">
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="rounded px-2 py-1 text-sm border"
+          >
+            <option value="blue">🔵 青系</option>
+            <option value="pink">🌸 ピンク系</option>
+            <option value="green">🌿 緑系</option>
+            <option value="dark">🌙 ダーク</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {projectNames.map(name => (
+          <Button
+            key={name}
+            onClick={() => setActiveProject(name)}
+            className={`text-xs rounded-full px-3 py-1 ${
+              activeProject === name
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-200"
+            }`}
+          >
+            {name}
+          </Button>
         ))}
       </div>
 
-      <div className="flex gap-2 mt-4">
-        <Input value={newClient} onChange={e => setNewClient(e.target.value)} placeholder="クライアント名" className="rounded-lg border px-3 py-2 flex-1" />
-        <Button onClick={addClient} className="bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg px-4 py-2">＋ 追加</Button>
+      <Input
+        placeholder="🔍 タスク名またはクライアント名で検索"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-blue-300 rounded-xl px-4 py-2 bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+
+      <div className="grid gap-3 sm:gap-5 mb-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+        <Input
+          placeholder="✨ 新しいタスク"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        />
+        <Input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        />
+        <Input
+          placeholder="🎨 クライアント名 (例: A, B, C)"
+          value={client}
+          onChange={(e) => setClient(e.target.value)}
+          className="rounded-xl px-4 py-2 border border-blue-300 bg-white text-black shadow-sm w-full"
+        />
+        <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl px-4 py-2 transition-all shadow-md w-full">＋ 追加</Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-        {visibleClients.map(c => (
-          <Card key={c.name} className={`rounded-xl shadow p-4 ${c.color}`}>
-            <CardContent className="space-y-3">
-              <div className="font-bold text-lg text-gray-900">{c.name}</div>
-              {(projects[c.name] || []).map((task, index) => (
-                <div key={index} className="bg-white p-2 rounded border shadow-sm flex justify-between items-center">
-                  <span className="text-gray-800">{task.title}</span>
-                  <span className={`text-sm font-medium ${task.done ? "text-green-600" : "text-gray-500"}`}>{task.done ? "完了" : "未完了"}</span>
-                </div>
-              ))}
+      <div className="grid grid-cols-1 gap-4">
+        {filteredTasks.map((task, idx) => (
+          <Card key={idx} className="bg-white rounded-xl shadow p-4">
+            <CardContent className="p-0">
+              <div className="font-semibold text-lg text-black">{task.title}</div>
+              <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
             </CardContent>
           </Card>
         ))}
