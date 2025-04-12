@@ -1,4 +1,4 @@
-// ✅ 改善版UI：見やすく戻した進捗表示（カード＋セレクト）
+// ✅ 各クライアントに属するタスクの一覧とそれぞれの進捗表示
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
@@ -44,12 +44,6 @@ export default function TaskManager() {
     setProjects(updated);
   };
 
-  const getProgress = (clientName) => {
-    const tasks = projects[clientName] || [];
-    const doneCount = tasks.filter(t => t.done).length;
-    return tasks.length === 0 ? 0 : Math.round((doneCount / tasks.length) * 100);
-  };
-
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       <div className="flex flex-wrap gap-2">
@@ -70,14 +64,14 @@ export default function TaskManager() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
         {clientList.map(c => (
           <Card key={c.name} className={`rounded-xl shadow p-4 ${c.color}`}>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
               <div className="font-bold text-lg">{c.name}</div>
-              <div className="text-sm text-gray-700">進捗率: {getProgress(c.name)}%</div>
-              <select value={getProgress(c.name)} disabled className="w-full p-2 rounded border bg-white">
-                {[...Array(11)].map((_, i) => (
-                  <option key={i} value={i * 10}>{i * 10}%</option>
-                ))}
-              </select>
+              {(projects[c.name] || []).map((task, index) => (
+                <div key={index} className="bg-white p-2 rounded border shadow-sm flex justify-between items-center">
+                  <span>{task.title}</span>
+                  <span className={`text-sm font-medium ${task.done ? "text-green-600" : "text-gray-500"}`}>{task.done ? "完了" : "未完了"}</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
         ))}
