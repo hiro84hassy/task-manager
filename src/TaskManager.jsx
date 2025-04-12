@@ -1,4 +1,4 @@
-// ✅ タスク編集はクリック時に表示されるよう改善
+// ✅ タスク編集はクリック時に表示されるよう改善し、進捗率は常時表示に変更
 import { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
@@ -162,6 +162,19 @@ export default function TaskManager() {
               >
                 {task.title}
               </div>
+              <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm">進捗:</label>
+                <select
+                  value={task.progress || 0}
+                  onChange={(e) => updateTask(idx, "progress", Number(e.target.value))}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  {[...Array(11)].map((_, i) => (
+                    <option key={i} value={i * 10}>{i * 10}%</option>
+                  ))}
+                </select>
+              </div>
               {editingTaskIndex === idx && (
                 <>
                   <Input
@@ -169,22 +182,9 @@ export default function TaskManager() {
                     onChange={(e) => updateTask(idx, "title", e.target.value)}
                     className="text-black font-semibold text-lg w-full"
                   />
-                  <div className="text-sm text-gray-600">期限: {task.due} | クライアント: {task.client}</div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm">進捗:</label>
-                    <select
-                      value={task.progress || 0}
-                      onChange={(e) => updateTask(idx, "progress", Number(e.target.value))}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      {[...Array(11)].map((_, i) => (
-                        <option key={i} value={i * 10}>{i * 10}%</option>
-                      ))}
-                    </select>
-                    <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>
-                      削除
-                    </Button>
-                  </div>
+                  <Button variant="destructive" size="sm" onClick={() => deleteTask(idx)}>
+                    削除
+                  </Button>
                 </>
               )}
             </CardContent>
